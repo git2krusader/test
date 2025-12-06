@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdventsCalendar for Kids 🎄</title>
+<style>
+:root{
+  --bg:#f6f8ff;
+  --card:#fff;
+  --accent:#ffb703;
+  --muted:#9aa5c4;
+  --completed:#dff7e6;
+  --tile-size:110px;
+  --radius:12px;
+  font-family: "Segoe UI", Roboto, system-ui, "Helvetica Neue", Arial;
+}
+body{
+  margin:0;
+  min-height:100vh;
+  background: linear-gradient(180deg,#eaf2ff 0%,var(--bg) 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:28px;
+  color:#0b1b2b;
+}
+.container{
+  width:100%;
+  max-width:1080px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.95));
+  border-radius:18px;
+  padding:22px;
+  box-shadow:0 12px 30px rgba(11,27,43,0.12);
+}
+header{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:14px;
+}
+header h1{
+  margin:0;
+  font-size:1.6rem;
+  letter-spacing:0.4px;
+}
+header p{
+  margin:0;
+  color:var(--muted);
+  font-size:0.95rem;
+}
+.calendar{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--tile-size), 1fr));
+  gap:12px;
+  align-items:stretch;
+  margin-top:14px;
+}
+.day-tile{
+  position:relative;
+  background:var(--card);
+  border-radius:12px;
+  height:var(--tile-size);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 6px 14px rgba(11,27,43,0.06);
+  cursor:default;
+  user-select:none;
+  transition:transform .18s ease, box-shadow .18s ease;
+  padding:10px;
+  text-align:center;
+}
+.day-tile:active{ transform: translateY(1px); }
+.day-number{
+  font-size:1.2rem;
+  font-weight:700;
+}
+.day-emoji{
+  font-size:1.6rem;
+  margin-top:6px;
+}
+.future{
+  opacity:0.45;
+  filter:grayscale(.2);
+}
+.completed{
+  background: linear-gradient(180deg,#fff 0%, #f6fff8 100%);
+  border:2px solid rgba(0,0,0,0.03);
+  color:#08523a;
+}
+.completed .check{
+  position:absolute;
+  right:8px;
+  top:8px;
+  background:linear-gradient(90deg,#fff,#e6ffe9);
+  border-radius:8px;
+  padding:4px 6px;
+  font-weight:700;
+  box-shadow:0 6px 12px rgba(6,50,30,0.06);
+}
+.clickable{
+  cursor:pointer;
+  box-shadow:0 10px 20px rgba(11,27,43,0.12);
+  border:2px solid rgba(255,183,3,0.07);
+}
+.clickable .lock{
+  background:linear-gradient(180deg,#ffd27a,#ffb703);
+}
+.lock {
+  width:44px;
+  height:44px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform-origin:center;
+  transition: transform .6s cubic-bezier(.15,.9,.25,1), opacity .25s;
+  box-shadow:0 6px 10px rgba(11,27,43,0.08);
+  margin-top:8px;
+}
+.lock svg{ width:22px; height:22px; display:block; }
+.unlocked .lock{
+  transform: rotateX(75deg) translateY(-8px) scale(.95);
+  opacity:0;
+}
+.starburst{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  overflow:visible;
+}
+.particle{
+  position:absolute;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  opacity:0;
+  transform: translate(-50%,-50%) scale(.2);
+  will-change:transform,opacity;
+}
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(6,12,28,0.45);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:80;
+  padding:20px;
+}
+.modal{
+  width:100%;
+  max-width:520px;
+  background:linear-gradient(180deg,#fff,#fbfdff);
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 28px 60px rgba(6,12,28,0.4);
+  position:relative;
+}
+.modal h2{ margin:0 0 8px 0; font-size:1.2rem; }
+.modal p{ margin:0 0 14px 0; color:var(--muted); }
+.modal .icon{
+  font-size:40px;
+  display:inline-block;
+  margin-right:10px;
+}
+.modal .actions{
+  display:flex;
+  gap:8px;
+  justify-content:flex-end;
+  margin-top:14px;
+}
+button.btn{
+  border:0;
+  padding:10px 12px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+.btn-primary{
+  background:linear-gradient(90deg,var(--accent), #ff8a00);
+  color:#082033;
+  box-shadow:0 10px 20px rgba(255,150,20,0.12);
+}
+.btn-ghost{
+  background:transparent;
+  border:1px solid rgba(11,27,43,0.06);
+  color:#0b1b2b;
+}
+.help{
+  margin-top:12px;
+  font-size:0.9rem;
+  color:var(--muted);
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+</style>
+</head>
+<body>
+<main class="container" role="main" aria-labelledby="main-title">
+<header>
+  <div>
+    <h1 id="main-title">AdventsCalendar for Kids 🎄</h1>
+    <p>Open one special kindness + creativity activity every day — December 1 → 25</p>
+  </div>
+</header>
+<section>
+  <div id="status-line" aria-live="polite"></div>
+  <div class="calendar" id="calendar" aria-label="Advent calendar with days 1 to 25"></div>
+  <div class="help">
+    <div>🔒 Locked = can't open yet · ✨ Click today's tile or past tiles to see activity!</div>
+  </div>
+</section>
+</main>
+<div id="modal-root" style="display:none;"></div>
+
+<script>
+const ACTIVITIES = [
+  { title: "Make a “Thank You” card", text: "Make a card for someone at home. Say something you appreciate about them.", emoji:"💌" },
+  { title: "Draw a new creature", text: "Draw a creature that has never existed before — give it a name!", emoji:"🦋" },
+  { title: "Do a good deed", text: "Do a kind thing today without telling anyone. Feel warm inside!", emoji:"🤫" },
+  { title: "Create a treasure map", text: "Draw a treasure map of your room. Where would X mark the spot?", emoji:"🗺️" },
+  { title: "Write 3 nice things about you", text: "Write three things that make you special — be proud!", emoji:"✍️" },
+  { title: "Build a nature tower", text: "Use leaves, sticks, or stones to build a tall tower outside.", emoji:"🌿" },
+  { title: "Make a Kindness Coupon", text: "Create a coupon to give someone (e.g., 'I will help you').", emoji:"🎟️" },
+  { title: "Invent a new game rule", text: "Add a new rule to a game you know. Try it out!", emoji:"🎲" },
+  { title: "Draw with circles & triangles", text: "Create a picture using only circles and triangles.", emoji:"🔺" },
+  { title: "Help someone at home", text: "Help a family member without being asked. Small things count!", emoji:"🤝" },
+  { title: "1 Minute Animal Stretching", text: "Pick 3 animals and stretch like them for 1 minute total.", emoji:"🧘" },
+  { title: "Mini comic about a hero", text: "Draw a short comic about a helpful superhero.", emoji:"🦸" },
+  { title: "Make something from scrap paper", text: "Turn scrap paper into a bookmark, box, or tiny craft.", emoji:"📎" },
+  { title: "Invent 3 new uses for an object", text: "Pick an object and imagine three new ways to use it.", emoji:"🔍" },
+  { title: "Say kind sentences to family", text: "Say one nice sentence to every family member today.", emoji:"🗣️" },
+  { title: "Draw with non-dominant hand", text: "Use your other hand to draw — it's okay if it's silly!", emoji:"✋" },
+  { title: "20-step Walk Like...", text: "Walk like a robot, penguin, and a giant — 20 fun steps!", emoji:"🚶" },
+  { title: "Gratitude jar", text: "Make a small jar and put one gratitude note in it.", emoji:"🪄" },
+  { title: "Design a new sandwich", text: "Invent a fun sandwich — pick tasty but safe ingredients!", emoji:"🥪" },
+  { title: "Write a 5-sentence kindness story", text: "Write 5 sentences about kindness spreading.", emoji:"📚" },
+  { title: "Find something reusable", text: "Find one thing that can be reused instead of thrown away.", emoji:"♻️" },
+  { title: "Create your own dance", text: "Make a dance and give it a funny or cool name.", emoji:"💃" },
+  { title: "Silly face & how it feels", text: "Draw a silly face and write one sentence about how laughter feels.", emoji:"😜" },
+  { title: "3-minute kindness meditation", text: "Sit quietly and think about someone you love and someone you'd help.", emoji:"🕯️" },
+  { title: "Make a simple decoration", text: "Use old materials to make a Christmas decoration.", emoji:"🎄" }
+];
+
+// --- Helper functions ---
+function currentDateInfo(){
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth(), day: now.getDate() };
+}
+function storageKeyForYear(y){ return `advent_completed_${y}`; }
+function loadCompleted(year){ try{ return JSON.parse(localStorage.getItem(storageKeyForYear(year)))||[]; }catch(e){return [];} }
+function saveCompleted(year, arr){ localStorage.setItem(storageKeyForYear(year), JSON.stringify(arr)); }
+function markCompleted(year, day){ const arr=new Set(loadCompleted(year)); arr.add(day); saveCompleted(year, Array.from(arr)); }
+
+// --- Calendar build ---
+function buildCalendar(){
+  const calendarEl = document.getElementById('calendar');
+  const statusLine = document.getElementById('status-line');
+  calendarEl.innerHTML='';
+  const { year, month, day } = currentDateInfo();
+  const completed = new Set(loadCompleted(year));
+  statusLine.textContent = month!==11 ? "It's not December yet. The fun begins in December!" : `Today is December ${day}. Click today's or past tiles to see activity!`;
+
+  for(let d=1; d<=25; d++){
+    const tile=document.createElement('div');
+    tile.className='day-tile';
+    tile.dataset.day=d;
+    const number=document.createElement('div'); number.className='day-number'; number.textContent=d; tile.appendChild(number);
+    const emoji=document.createElement('div'); emoji.className='day-emoji'; emoji.textContent=ACTIVITIES[d-1].emoji||'⭐'; tile.appendChild(emoji);
+    const lock=document.createElement('div'); lock.className='lock'; lock.innerHTML=`<svg viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="#331d00" stroke-width="1.2" fill="#fff"/><path d="M7 10V8a5 5 0 0110 0v2" stroke="#331d00" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`; tile.appendChild(lock);
+    const starburst=document.createElement('div'); starburst.className='starburst'; tile.appendChild(starburst);
+    const check=document.createElement('div'); check.className='check'; check.textContent='✓'; check.style.display='none'; tile.appendChild(check);
+
+    let status='future';
+    if(month>11) status='completed';
+    else if(month<11) status='future';
+    else { 
+      if(d<day) status='past';
+      else if(d===day) status=completed.has(d)?'completed':'today';
+      else status='future'; 
+    }
+
+    tile.classList.add(status);
+
+    if(status==='completed'){ 
+      tile.classList.add('completed'); 
+      check.style.display='block'; 
+      tile.removeAttribute('tabindex'); 
+    }
+    else if(status==='future'){ 
+      tile.classList.add('future'); 
+      tile.removeAttribute('tabindex'); 
+    }
+    else{ 
+      tile.classList.add('clickable'); 
+      tile.addEventListener('click', ()=> status==='today' ? handleTodayClick(tile, year, d) : openActivityModal(year,d)); 
+    }
+    calendarEl.appendChild(tile);
+  }
+}
+
+// --- Animation & sound for today ---
+function handleTodayClick(tileEl, year, dayNumber){
+  const completed = new Set(loadCompleted(year));
+  if(completed.has(dayNumber)) return;
+  playChime();
+  animateUnlock(tileEl).then(()=>openActivityModal(year, dayNumber));
+}
+
+function animateUnlock(tileEl){
+  return new Promise(resolve=>{
+    tileEl.classList.add('unlocked');
+    const burst = tileEl.querySelector('.starburst');
+    burst.innerHTML='';
+    const colors=['#ffde59','#ffd1a9','#ffd1f0','#b9f2ff','#ffe2a8'];
+    const centerX=tileEl.clientWidth/2;
+    const centerY=tileEl.clientHeight/2;
+    for(let i=0;i<14;i++){
+      const p=document.createElement('div'); 
+      p.className='particle'; 
+      p.style.left=`${centerX}px`; 
+      p.style.top=`${centerY}px`; 
+      p.style.background=colors[i%colors.length]; 
+      burst.appendChild(p);
+      const angle=(Math.PI*2)*(i/14)+(Math.random()*0.6-0.3); 
+      const dist=36+Math.random()*60; 
+      const delay=i*50;
+      setTimeout(()=>{ 
+        p.animate([{transform:`translate(-50%,-50%) scale(.25) translate(0,0)`,opacity:0},
+                   {transform:`translate(-50%,-50%) scale(1.05) translate(${Math.cos(angle)*dist}px,${Math.sin(angle)*dist}px)`,opacity:1},
+                   {transform:`translate(-50%,-50%) scale(.1) translate(${Math.cos(angle)*dist*1.35}px,${Math.sin(angle)*dist*1.35}px)`,opacity:0}],{duration:820+Math.random()*300,easing:'cubic-bezier(.2,.8,.2,1)'})
+      }, delay);
+    }
+    const lock=tileEl.querySelector('.lock');
+    lock.animate([{transform:'rotateX(0deg)'},{transform:'rotateX(75deg) translateY(-8px) scale(.95)'}],{duration:750,easing:'cubic-bezier(.15,.9,.25,1)'});
+    setTimeout(()=>resolve(),950);
+  });
+}
+
+// --- Modal for activity ---
+function openActivityModal(year, day){
+  const modalRoot=document.getElementById('modal-root');
+  modalRoot.innerHTML=''; 
+  modalRoot.style.display='block';
+
+  const backdrop=document.createElement('div'); 
+  backdrop.className='modal-backdrop';
+
+  const modal=document.createElement('div'); 
+  modal.className='modal';
+
+  const activity=ACTIVITIES[day-1];
+  modal.innerHTML=`<h2><span class="icon">${activity.emoji}</span>${activity.title}</h2><p>${activity.text}</p>`;
+
+  const actions=document.createElement('div'); actions.className='actions';
+  const btnDone=document.createElement('button'); btnDone.className='btn btn-primary'; btnDone.textContent='Done!';
+  btnDone.addEventListener('click',()=>{
+    markCompleted(year,day);
+    refreshTileAsCompleted(day);
+    closeModal();
+  });
+  const btnClose=document.createElement('button'); btnClose.className='btn btn-ghost'; btnClose.textContent='Close';
+  btnClose.addEventListener('click', closeModal);
+
+  actions.appendChild(btnClose);
+  actions.appendChild(btnDone);
+  modal.appendChild(actions);
+  backdrop.appendChild(modal);
+  modalRoot.appendChild(backdrop);
+}
+
+function closeModal(){ document.getElementById('modal-root').style.display='none'; }
+function refreshTileAsCompleted(day){
+  const tile=document.querySelector(`.day-tile[data-day='${day}']`);
+  if(!tile) return;
+  tile.classList.remove('today','clickable'); 
+  tile.classList.add('completed'); 
+  const check=tile.querySelector('.check'); 
+  if(check) check.style.display='block';
+}
+
+// --- Simple chime ---
+function playChime(){
+  const audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
+  o.type='sine'; 
+  o.frequency.setValueAtTime(880,audioCtx.currentTime);
+  g.gain.setValueAtTime(0.05,audioCtx.currentTime);
+  o.connect(g); g.connect(audioCtx.destination); 
+  o.start(); o.stop(audioCtx.currentTime+0.25);
+}
+
+// --- Initialize calendar ---
+buildCalendar();
+</script>
+
+</body>
+</html>
